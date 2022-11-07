@@ -26,15 +26,6 @@ public class BrotherPrint: CAPPlugin, BRPtouchNetworkDelegate {
             return;
         }
 
-        print(printerType)
-
-//        if (printerType != "QL-820NWB" || printerType != "QL-810W") {
-//            // iOS非対応
-//            call.error("Error - connection is not found.");
-//            return;
-//        }
-//
-
         // 検索からデバイス情報が得られた場合
         let localName: String = call.getString("localName") ?? "";
         let ipAddress: String = call.getString("ipAddress") ?? "";
@@ -91,10 +82,7 @@ public class BrotherPrint: CAPPlugin, BRPtouchNetworkDelegate {
             printSettings.halftone = BRLMPrintSettingsHalftone.errorDiffusion;
             printSettings.numCopies = UInt(call.getInt("numberOfCopies") ?? 1);
 
-
             let printError = printerDriver.printImage(with: decodedByte.cgImage!, settings: printSettings);
-
-            print(printError)
 
             if printError.code != .noError {
                 printerDriver.closeChannel();
@@ -117,7 +105,7 @@ public class BrotherPrint: CAPPlugin, BRPtouchNetworkDelegate {
         NSLog("Start searchWiFiPrinter");
         DispatchQueue.main.async {
             let manager = BRPtouchNetworkManager()
-            manager.setPrinterNames(["QL-820NWB","QL-810W"])
+            manager.setPrinterNames(["QL-810W", "QL-820NWB"]);
             manager.delegate = self
             manager.startSearch(5)
             self.networkManager = manager
@@ -134,29 +122,21 @@ public class BrotherPrint: CAPPlugin, BRPtouchNetworkDelegate {
             guard let devices = manager.getPrinterNetInfo() else {
                 return
             }
-            var printerList = [] as Array
+//            var resultList: [String] = [];
+//            var printerList:[String] = [];
             for deviceInfo in devices {
                 if let deviceInfo = deviceInfo as? BRPtouchDeviceInfo {
-                    print(deviceInfo);
-                }
+                    self.notifyListeners("onIpAddressAvailable", data: [
+                        "foundPrinter": deviceInfo.strIPAddress ?? ""
+                    ]);
+                };
+
             }
-
-//            if let items = printerList as NSArray as? [String] {
-//                let jsonData: Data? = try? JSONSerialization.data(withJSONObject: items)
-//                let jsonString = String(data: jsonData!, encoding: .utf8)
-//
-//                print(jsonString as Any);
-//            }
-
-            print(printerList)
-
-
-            self.notifyListeners("onIpAddressAvailable", data: [
-                "foundPrinters": printerList,
-            ]);
+//            self.notifyListeners("onIpAddressAvailable", data: [
+//                "foundPrinters": printerList,
+//            ]);
         }
     }
-
 
     @objc func searchBLEPrinter(_ call: CAPPluginCall) {
         DispatchQueue.main.async {
